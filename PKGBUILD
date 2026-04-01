@@ -1,5 +1,5 @@
 pkgname=profuse-git
-pkgver=r1.0000000
+pkgver=r7.a9b59ca
 pkgrel=1
 pkgdesc="Proton Drive FUSE client for Linux — mounts your Proton Drive as a local filesystem"
 arch=('x86_64' 'aarch64')

@@ -1,14 +1,13 @@
-# Maintainer: Nick <nick@example.com>
 pkgname=profuse-git
 pkgver=r1.0000000
 pkgrel=1
 pkgdesc="Proton Drive FUSE client for Linux — mounts your Proton Drive as a local filesystem"
 arch=('x86_64' 'aarch64')
-url="https://github.com/nick/profuse"
+url="https://github.com/nearwood/profuse"
 license=('GPL-3.0-or-later')
 depends=(
-    'fuse3'          # FUSE kernel interface
-    'libsecret'      # Secret Service implementation (GNOME Keyring / KWallet)
+    'fuse3'
+    'libsecret'
 )
 makedepends=(
     'go'
@@ -47,11 +46,9 @@ build() {
 package() {
     cd "$srcdir/profuse"
 
-    # Binary
     install -Dm755 profuse \
         "$pkgdir/usr/bin/profuse"
 
-    # systemd user service
     install -Dm644 contrib/systemd/profuse.service \
         "$pkgdir/usr/lib/systemd/user/profuse.service"
 }

@@ -1,1 +1,7 @@
 profuse
+
+# makepkg build artifacts
+*.pkg.tar.zst
+*.pkg.tar.xz
+src/
+pkg/

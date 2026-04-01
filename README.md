@@ -14,17 +14,12 @@ startup.
 
 ### From AUR
 
+Clone the repo, and then inside the repo directory run: `makepkg -si`
+
+Or, using a helper:
+
 ```bash
 yay -S profuse-git
-```
-
-### From source
-
-```bash
-git clone https://github.com/nick/profuse
-cd profuse
-go build -o profuse ./cmd/
-install -Dm755 profuse /usr/local/bin/profuse
 ```
 
 ## Usage
@@ -85,7 +80,9 @@ Neither file contains your plaintext password.
 
 ## AUR Maintenance
 
-### First submission
+### Updating the package
+
+Every time PKGBUILD changes (new pkgrel, updated deps, etc.):
 
 ```bash
 # 1. Validate the build locally
@@ -96,19 +93,7 @@ namcap profuse-git-*.pkg.tar.zst
 # 2. Generate the required metadata file
 makepkg --printsrcinfo > .SRCINFO
 
-# 3. Push to AUR (creating the package if it doesn't exist)
-git remote add aur ssh://aur@aur.archlinux.org/profuse-git.git
-git add .SRCINFO
-git commit -m "Add .SRCINFO"
-git push aur main
-```
-
-### Updating the package
-
-Every time PKGBUILD changes (new pkgrel, updated deps, etc.):
-
-```bash
-makepkg --printsrcinfo > .SRCINFO
+# 3. Commit and push
 git add PKGBUILD .SRCINFO
 git commit -m "Update to r2.abc1234"
 git push origin main   # GitHub
@@ -128,16 +113,3 @@ git push aur main      # AUR
   `/usr/bin/`, not `/usr/local/bin/`.
 - **Dependency not listed** — if namcap flags a linked library, add the
   package that owns it to `depends`.
-
-### SSH keys
-
-AUR uses a separate SSH remote but you can reuse your existing GitHub public
-key — just add it to your AUR account at
-https://aur.archlinux.org/account (Settings → SSH Keys).
-
-Both remotes can coexist:
-
-```bash
-git remote add origin git@github.com:nick/profuse.git
-git remote add aur    ssh://aur@aur.archlinux.org/profuse-git.git
-```

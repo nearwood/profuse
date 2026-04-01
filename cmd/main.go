@@ -6,15 +6,15 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/nick/protondriveclient/internal/auth"
-	"github.com/nick/protondriveclient/internal/fs"
+	"github.com/nick/profuse/internal/auth"
+	"github.com/nick/profuse/internal/fs"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
 
 func main() {
 	root := &cobra.Command{
-		Use:   "protondrive",
+		Use:   "profuse",
 		Short: "Mount Proton Drive as a local filesystem",
 	}
 

@@ -30,7 +30,7 @@ import (
 const (
 	apiBase        = "https://mail.proton.me/api"
 	appVersion     = "Other"
-	keyringService = "protondriveclient"
+	keyringService = "profuse"
 )
 
 // Session holds the tokens needed to restore a client across process restarts.
@@ -103,7 +103,7 @@ func (s *Session) Unlock(ctx context.Context) (*proton.Client, *pgpcrypto.KeyRin
 	encoded, err := keyring.Get(keyringService, s.Username)
 	if err != nil {
 		return nil, nil, fmt.Errorf("reading key password from keyring: %w\n"+
-			"hint: run 'protondrive auth login' to re-authenticate", err)
+			"hint: run 'profuse auth login' to re-authenticate", err)
 	}
 
 	saltedKeyPass, err := base64.StdEncoding.DecodeString(encoded)
@@ -146,7 +146,7 @@ func (s *Session) Logout(ctx context.Context) error {
 	return nil
 }
 
-// Save writes the session to ~/.config/protondriveclient/session.json.
+// Save writes the session to ~/.config/profuse/session.json.
 func (s *Session) Save() error {
 	path, err := sessionPath()
 	if err != nil {
@@ -172,7 +172,7 @@ func LoadSession() (*Session, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("no stored session — run 'protondrive auth login' first")
+			return nil, fmt.Errorf("no stored session — run 'profuse auth login' first")
 		}
 		return nil, err
 	}
@@ -263,5 +263,5 @@ func sessionPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "protondriveclient", "session.json"), nil
+	return filepath.Join(dir, "profuse", "session.json"), nil
 }

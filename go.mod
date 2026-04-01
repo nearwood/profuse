@@ -1,4 +1,4 @@
-module github.com/nick/protondriveclient
+module github.com/nick/profuse
 
 go 1.26.1
 

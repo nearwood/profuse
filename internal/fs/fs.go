@@ -36,8 +36,8 @@ func Mount(ctx context.Context, mountpoint string, c *proton.Client, addrKR *pgp
 
 	cacheTTL := 5 * time.Second
 	mountOpts := fuse.MountOptions{
-		FsName: "protondrive",
-		Name:   "protondriveclient",
+		FsName: "profuse",
+		Name:   "profuse",
 		Debug:  opts.Debug,
 		// Suppress xattr calls; we don't implement them.
 		DisableXAttrs: true,

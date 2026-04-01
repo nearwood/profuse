@@ -1,0 +1,30 @@
+[Unit]
+Description=Proton Drive FUSE mount
+Documentation=https://github.com/nick/protondriveclient
+# Start after the network is up and the desktop session is ready
+# (graphical-session.target ensures the keyring daemon is running).
+After=network-online.target graphical-session.target
+Wants=network-online.target
+# If the mount drops, consider the service failed.
+RequiresMountsFor=%h/ProtonDrive
+
+[Service]
+Type=simple
+
+# Create the mountpoint if it doesn't exist.
+ExecStartPre=/usr/bin/mkdir -p %h/ProtonDrive
+
+ExecStart=/usr/bin/profuse mount %h/ProtonDrive
+ExecStop=/usr/bin/fusermount3 -u %h/ProtonDrive
+
+# The D-Bus session bus address is needed so go-keyring can reach the
+# Secret Service (GNOME Keyring / KWallet) from within the service.
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
+
+Restart=on-failure
+RestartSec=5
+# Don't restart if we exited cleanly (e.g. manual unmount).
+SuccessExitStatus=0
+
+[Install]
+WantedBy=graphical-session.target

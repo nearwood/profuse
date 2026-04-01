@@ -1,10 +1,10 @@
 # Maintainer: Nick <nick@example.com>
-pkgname=protondriveclient-git
+pkgname=profuse-git
 pkgver=r1.0000000
 pkgrel=1
 pkgdesc="Proton Drive FUSE client for Linux — mounts your Proton Drive as a local filesystem"
 arch=('x86_64' 'aarch64')
-url="https://github.com/nick/protondriveclient"
+url="https://github.com/nick/profuse"
 license=('GPL-3.0-or-later')
 depends=(
     'fuse3'          # FUSE kernel interface
@@ -18,18 +18,18 @@ optdepends=(
     'gnome-keyring: Secret Service backend for GNOME desktops'
     'kwallet: Secret Service backend for KDE desktops'
 )
-provides=('protondriveclient')
-conflicts=('protondriveclient')
+provides=('profuse')
+conflicts=('profuse')
 source=("git+${url}.git")
 sha256sums=('SKIP')
 
 pkgver() {
-    cd "$srcdir/protondriveclient"
+    cd "$srcdir/profuse"
     printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 build() {
-    cd "$srcdir/protondriveclient"
+    cd "$srcdir/profuse"
 
     export CGO_ENABLED=0
     export GOPATH="$srcdir/gopath"
@@ -40,18 +40,18 @@ build() {
         -mod=readonly \
         -modcacherw \
         -ldflags "-s -w -X main.version=${pkgver}" \
-        -o protondrive \
+        -o profuse \
         ./cmd/
 }
 
 package() {
-    cd "$srcdir/protondriveclient"
+    cd "$srcdir/profuse"
 
     # Binary
-    install -Dm755 protondrive \
-        "$pkgdir/usr/bin/protondrive"
+    install -Dm755 profuse \
+        "$pkgdir/usr/bin/profuse"
 
     # systemd user service
-    install -Dm644 contrib/systemd/protondrive.service \
-        "$pkgdir/usr/lib/systemd/user/protondrive.service"
+    install -Dm644 contrib/systemd/profuse.service \
+        "$pkgdir/usr/lib/systemd/user/profuse.service"
 }

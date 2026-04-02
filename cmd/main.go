@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"syscall"
 
 	"github.com/nick/profuse/internal/auth"
@@ -18,7 +19,7 @@ func main() {
 		Short: "Mount Proton Drive as a local filesystem",
 	}
 
-	root.AddCommand(cmdAuth(), cmdMount())
+	root.AddCommand(cmdAuth(), cmdMount(), cmdUnmount())
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
@@ -144,6 +145,18 @@ func cmdMount() *cobra.Command {
 
 	cmd.Flags().BoolVar(&debug, "debug", false, "Enable FUSE debug logging")
 	return cmd
+}
+
+func cmdUnmount() *cobra.Command {
+	return &cobra.Command{
+		Use:     "unmount <mountpoint>",
+		Aliases: []string{"umount"},
+		Short:   "Unmount a Proton Drive mountpoint",
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return exec.Command("fusermount3", "-u", args[0]).Run()
+		},
+	}
 }
 
 func readPassword(prompt string) ([]byte, error) {

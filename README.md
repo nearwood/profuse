@@ -38,7 +38,7 @@ profuse mount ~/ProtonDrive
 To unmount:
 
 ```bash
-fusermount3 -u ~/ProtonDrive
+profuse unmount ~/ProtonDrive
 ```
 
 ### Auth commands

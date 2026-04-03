@@ -1,0 +1,32 @@
+name: AUR publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_aur
+          chmod 600 ~/.ssh/id_aur
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Push to AUR
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur
+        run: |
+          git clone ssh://aur@aur.archlinux.org/profuse-git.git /tmp/aur
+          cp PKGBUILD .SRCINFO /tmp/aur/
+          cd /tmp/aur
+          git config user.name "${{ vars.AUR_USERNAME }}"
+          git config user.email "${{ vars.AUR_EMAIL }}"
+          git add PKGBUILD .SRCINFO
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Update to ${{ github.ref_name }}"
+          git push

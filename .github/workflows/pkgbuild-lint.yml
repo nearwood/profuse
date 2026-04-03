@@ -1,0 +1,16 @@
+name: PKGBUILD lint
+
+on:
+  push:
+    paths: [PKGBUILD]
+  pull_request:
+    paths: [PKGBUILD]
+
+jobs:
+  namcap:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pacman -Sy --noconfirm namcap
+      - run: namcap PKGBUILD

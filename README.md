@@ -93,22 +93,26 @@ namcap profuse-git-*.pkg.tar.zst
 # 2. Generate the required metadata file
 makepkg --printsrcinfo > .SRCINFO
 
-# 3. Commit and push
+# 3. Commit to main
 git add PKGBUILD .SRCINFO
 git commit -m "Update to r2.abc1234"
-git push origin main   # GitHub
-git push aur main      # AUR
+git push origin main
+
+# 4. Sync the aur branch and push to AUR
+git checkout aur
+git checkout main -- PKGBUILD .SRCINFO
+git commit -m "Update to r2.abc1234"
+git push aur
+git checkout main
 ```
+
+The `aur` branch is an orphan containing only `PKGBUILD` and `.SRCINFO` — the
+AUR rejects repos with subdirectories. `git push aur` maps it to the `master`
+branch that AUR expects.
 
 ### Common namcap warnings
 
 - **`SKIP` checksum** — expected for `-git` packages, not an error.
-- **Missing license file** — add a `LICENSE` file to the repo; namcap expects
-  it to be installed into the package under `/usr/share/licenses/profuse/`.
-  Add to PKGBUILD:
-  ```bash
-  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-  ```
 - **ELF file outside allowed dirs** — make sure the binary goes to
   `/usr/bin/`, not `/usr/local/bin/`.
 - **Dependency not listed** — if namcap flags a linked library, add the

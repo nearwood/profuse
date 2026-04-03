@@ -1,5 +1,9 @@
 # profuse
 
+![Go Version](https://img.shields.io/badge/Go-1.26%2B-00ADD8.svg) ![FUSE](https://img.shields.io/badge/FUSE-3-orange.svg) ![License](https://img.shields.io/badge/License-GPLv3-green.svg) [![AUR](https://img.shields.io/aur/version/profuse-git)](https://aur.archlinux.org/packages/profuse-git)
+
+> ⚠️ **Unofficial** - Not affiliated with or endorsed by Proton AG or Proton Drive. ⚠️
+
 A read-only Proton Drive FUSE client for Linux. Mounts your Proton Drive as a
 local filesystem using the OS keyring (libsecret) for secure, unattended
 startup.
@@ -9,6 +13,10 @@ startup.
 - `fuse3`
 - `libsecret` (plus a running Secret Service daemon — GNOME Keyring or KWallet)
 - A Proton account
+
+## General Idea
+
+This installs a binary and user service. You use the binary to login, the user service then handles mounting automatically at login.
 
 ## Installation
 

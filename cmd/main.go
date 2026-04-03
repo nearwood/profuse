@@ -7,16 +7,20 @@ import (
 	"os/exec"
 	"syscall"
 
+	"github.com/godbus/dbus/v5"
 	"github.com/nick/profuse/internal/auth"
 	"github.com/nick/profuse/internal/fs"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
 
+var version = "dev"
+
 func main() {
 	root := &cobra.Command{
-		Use:   "profuse",
-		Short: "Mount Proton Drive as a local filesystem",
+		Use:     "profuse",
+		Short:   "Mount Proton Drive as a local filesystem",
+		Version: version,
 	}
 
 	root.AddCommand(cmdAuth(), cmdMount(), cmdUnmount())
@@ -126,20 +130,26 @@ func cmdMount() *cobra.Command {
 
 			sess, err := auth.LoadSession()
 			if err != nil {
+				notifyError(err)
 				return err
 			}
 
 			ctx := context.Background()
 			client, addrKR, err := sess.Unlock(ctx)
 			if err != nil {
+				notifyError(err)
 				return err
 			}
 
 			fmt.Printf("Mounting Proton Drive at %s\n", mountpoint)
-			return fs.Mount(ctx, mountpoint, client, addrKR, fs.Options{
+			if err := fs.Mount(ctx, mountpoint, client, addrKR, fs.Options{
 				Debug:    debug,
 				ReadOnly: true,
-			})
+			}); err != nil {
+				notifyError(err)
+				return err
+			}
+			return nil
 		},
 	}
 
@@ -157,6 +167,26 @@ func cmdUnmount() *cobra.Command {
 			return exec.Command("fusermount3", "-u", args[0]).Run()
 		},
 	}
+}
+
+func notifyError(err error) {
+	conn, dbusErr := dbus.ConnectSessionBus()
+	if dbusErr != nil {
+		return
+	}
+	defer conn.Close()
+
+	obj := conn.Object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
+	obj.Call("org.freedesktop.Notifications.Notify", 0,
+		"profuse",         // app_name
+		uint32(0),         // replaces_id
+		"dialog-error",    // icon
+		"Proton Drive failed to mount", // summary
+		err.Error(),       // body
+		[]string{},        // actions
+		map[string]dbus.Variant{}, // hints
+		int32(-1),         // timeout (-1 = server default)
+	)
 }
 
 func readPassword(prompt string) ([]byte, error) {

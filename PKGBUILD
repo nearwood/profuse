@@ -51,4 +51,7 @@ package() {
 
     install -Dm644 contrib/systemd/profuse.service \
         "$pkgdir/usr/lib/systemd/user/profuse.service"
+
+    install -Dm644 LICENSE \
+        "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

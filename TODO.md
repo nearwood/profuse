@@ -14,9 +14,9 @@
 
 ## Packaging
 
-- [ ] **Add a `LICENSE` file** — namcap will flag its absence when run against the built package
-- [ ] **Version flag** — wire up `profuse --version` using `-ldflags "-X main.version=..."`; the PKGBUILD already passes this, the binary just doesn't use it yet
-- [ ] **`.SRCINFO` and AUR submission** — when happy with the feature set
+- [x] **Add a `LICENSE` file** — namcap will flag its absence when run against the built package
+- [x] **Version flag** — wire up `profuse --version` using `-ldflags "-X main.version=..."`; the PKGBUILD already passes this, the binary just doesn't use it yet
+- [x] **`.SRCINFO` and AUR submission** — when happy with the feature set
 
 ## Stretch
 

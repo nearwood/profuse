@@ -94,36 +94,62 @@ Neither file contains your plaintext password.
 The PKGBUILDs live in `contrib/aur/profuse/` (releases) and
 `contrib/aur/profuse-git/` (latest commit).
 
-### Releasing
+### Versioning
 
-Versions come from git tags (`vX.Y.Z`). To cut a release:
+The version lives only in git tags (`vX.Y.Z`); nothing in the repo needs
+editing to bump it. Before 1.0, bump the patch number (`0.1.2`) for fixes and
+the minor number (`0.2.0`) for features or breaking changes.
+
+From the tag, the release workflow derives:
+
+| Where | Version |
+|---|---|
+| `profuse --version` | `0.2.0` (via `-X main.version`) |
+| `profuse` package | `pkgver=0.2.0`, `pkgrel=1` |
+| `profuse-git` package | `0.2.0.r0.g<hash>` when published; local builds compute `0.2.0.r<commits since tag>.g<hash>` |
+
+The `pkgver` and `sha256sums` in the repo copy of `contrib/aur/profuse/PKGBUILD`
+are placeholders — the workflow fills in the real values when publishing.
+
+### Releasing
 
 ```bash
 git tag -a v0.2.0 -m v0.2.0
 git push origin v0.2.0
-gh release create v0.2.0 --generate-notes
+gh release create v0.2.0 --generate-notes   # or publish it in the GitHub UI
 ```
 
-Publishing the release runs `.github/workflows/aur-publish.yml`. It sets
-`pkgver` from the tag, fills in the source checksum, regenerates `.SRCINFO`,
-and pushes both packages to the AUR. It needs the `AUR_SSH_PRIVATE_KEY`
-secret and the `AUR_USERNAME` / `AUR_EMAIL` variables.
+Publishing the release (not a draft) runs `.github/workflows/aur-publish.yml`,
+which sets the versions above, fills in the source checksum, regenerates
+`.SRCINFO`, and pushes both packages to the AUR. It needs the
+`AUR_SSH_PRIVATE_KEY` secret (a passphrase-less private key) and the
+`AUR_USERNAME` / `AUR_EMAIL` variables.
 
 ### Packaging-only changes
 
-To change a PKGBUILD without a new release (deps, pkgrel, etc.):
+For a PKGBUILD fix with no code change (a missing dependency, a build flag),
+bump `pkgrel` instead of the version:
 
-```bash
-cd contrib/aur/profuse      # or profuse-git
-makepkg -si
-namcap PKGBUILD
-namcap profuse-*.pkg.tar.zst
-makepkg --printsrcinfo > .SRCINFO
-```
+1. Edit `contrib/aur/<pkgname>/PKGBUILD`, check it locally, and commit to `main`:
 
-Commit it, then either wait for the next release or push `PKGBUILD` and
-`.SRCINFO` to `ssh://aur@aur.archlinux.org/<pkgname>.git` by hand. The AUR
-repo must contain only those files at its root, on the `master` branch.
+   ```bash
+   cd contrib/aur/profuse      # or profuse-git
+   makepkg -si
+   namcap PKGBUILD
+   namcap profuse-*.pkg.tar.zst
+   ```
+
+2. Run the workflow manually: **Actions → AUR publish → Run workflow** on
+   `main`, with the current release tag, the next `pkgrel` (e.g. `2`), and the
+   package(s) that changed. Or:
+
+   ```bash
+   gh workflow run aur-publish.yml -f tag=v0.2.0 -f pkgrel=2 -f package=profuse
+   ```
+
+Manual runs take the PKGBUILDs from the branch they run on and the version
+from the tag. The next release resets `pkgrel` to 1. The same manual run with
+`pkgrel=1` also re-publishes a release whose workflow run failed.
 
 ### Common namcap warnings
 

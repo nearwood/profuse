@@ -3,6 +3,15 @@ name: AUR publish
 on:
   release:
     types: [published]
+  # Re-publish an existing tag, e.g. after fixing this workflow.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish (e.g. v0.1.1)
+        required: true
+
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
 jobs:
   publish:
@@ -13,6 +22,8 @@ jobs:
         run: pacman -Syu --noconfirm git openssh pacman-contrib
 
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TAG }}
 
       - name: Set up build user
         run: |
@@ -22,7 +33,7 @@ jobs:
 
       - name: Update PKGBUILDs
         run: |
-          ver="${GITHUB_REF_NAME#v}"
+          ver="${TAG#v}"
           short="$(git rev-parse --short=7 HEAD)"
 
           cd contrib/aur/profuse
@@ -37,10 +48,19 @@ jobs:
       # ssh resolves ~ from /etc/passwd (/root), not the container's $HOME,
       # so use explicit paths.
       - name: Set up SSH
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         run: |
           mkdir -p /root/.ssh
-          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > /root/.ssh/id_aur
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" | tr -d '\r' > /root/.ssh/id_aur
           chmod 600 /root/.ssh/id_aur
+          if ! ssh-keygen -y -P '' -f /root/.ssh/id_aur > /dev/null; then
+            head -n1 /root/.ssh/id_aur | grep -q '^-----BEGIN .*PRIVATE KEY-----$' \
+              && hint="has a private key header but won't load (truncated, or has a passphrase?)" \
+              || hint="doesn't start with a private key header (public key pasted?)"
+            echo "::error::AUR_SSH_PRIVATE_KEY $hint ($(wc -l < /root/.ssh/id_aur) lines)"
+            exit 1
+          fi
           ssh-keyscan aur.archlinux.org > /root/.ssh/known_hosts
           test -s /root/.ssh/known_hosts
 
@@ -62,7 +82,7 @@ jobs:
             if git diff --cached --quiet; then
               echo "$pkg: no changes"
             else
-              git commit -m "Update to $GITHUB_REF_NAME"
+              git commit -m "Update to $TAG"
               git push origin HEAD:master
             fi
             cd "$GITHUB_WORKSPACE"

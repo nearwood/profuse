@@ -1,6 +1,6 @@
 # profuse
 
-![Go Version](https://img.shields.io/badge/Go-1.26%2B-00ADD8.svg) ![FUSE](https://img.shields.io/badge/FUSE-3-orange.svg) ![License](https://img.shields.io/badge/License-GPLv3-green.svg) [![AUR](https://img.shields.io/aur/version/profuse-git)](https://aur.archlinux.org/packages/profuse-git)
+![Go Version](https://img.shields.io/badge/Go-1.26%2B-00ADD8.svg) ![FUSE](https://img.shields.io/badge/FUSE-3-orange.svg) ![License](https://img.shields.io/badge/License-GPLv3-green.svg) [![AUR](https://img.shields.io/aur/version/profuse)](https://aur.archlinux.org/packages/profuse) [![AUR git](https://img.shields.io/aur/version/profuse-git?label=aur-git)](https://aur.archlinux.org/packages/profuse-git)
 
 > ⚠️ **Unofficial** - Not affiliated with or endorsed by Proton AG or Proton Drive. ⚠️
 
@@ -22,13 +22,16 @@ This installs a binary and user service. You use the binary to login, the user s
 
 ### From AUR
 
-Clone the repo, and then inside the repo directory run: `makepkg -si`
+Two packages are available:
 
-Or, using a helper:
+- `profuse` — the latest tagged release
+- `profuse-git` — built from the latest commit on `main`
 
 ```bash
-yay -S profuse-git
+yay -S profuse      # or profuse-git
 ```
+
+Or build from this repo: `cd contrib/aur/profuse && makepkg -si`
 
 ## Usage
 
@@ -88,39 +91,44 @@ Neither file contains your plaintext password.
 
 ## AUR Maintenance
 
-### Updating the package
+The PKGBUILDs live in `contrib/aur/profuse/` (releases) and
+`contrib/aur/profuse-git/` (latest commit).
 
-Every time PKGBUILD changes (new pkgrel, updated deps, etc.):
+### Releasing
+
+Versions come from git tags (`vX.Y.Z`). To cut a release:
 
 ```bash
-# 1. Validate the build locally
-makepkg -si
-namcap PKGBUILD
-namcap profuse-git-*.pkg.tar.zst
-
-# 2. Generate the required metadata file
-makepkg --printsrcinfo > .SRCINFO
-
-# 3. Commit to main
-git add PKGBUILD .SRCINFO
-git commit -m "Update to r2.abc1234"
-git push origin main
-
-# 4. Sync the aur branch and push to AUR
-git checkout aur
-git checkout main -- PKGBUILD .SRCINFO
-git commit -m "Update to r2.abc1234"
-git push aur
-git checkout main
+git tag -a v0.2.0 -m v0.2.0
+git push origin v0.2.0
+gh release create v0.2.0 --generate-notes
 ```
 
-The `aur` branch is an orphan containing only `PKGBUILD` and `.SRCINFO` — the
-AUR rejects repos with subdirectories. `git push aur` maps it to the `master`
-branch that AUR expects.
+Publishing the release runs `.github/workflows/aur-publish.yml`. It sets
+`pkgver` from the tag, fills in the source checksum, regenerates `.SRCINFO`,
+and pushes both packages to the AUR. It needs the `AUR_SSH_PRIVATE_KEY`
+secret and the `AUR_USERNAME` / `AUR_EMAIL` variables.
+
+### Packaging-only changes
+
+To change a PKGBUILD without a new release (deps, pkgrel, etc.):
+
+```bash
+cd contrib/aur/profuse      # or profuse-git
+makepkg -si
+namcap PKGBUILD
+namcap profuse-*.pkg.tar.zst
+makepkg --printsrcinfo > .SRCINFO
+```
+
+Commit it, then either wait for the next release or push `PKGBUILD` and
+`.SRCINFO` to `ssh://aur@aur.archlinux.org/<pkgname>.git` by hand. The AUR
+repo must contain only those files at its root, on the `master` branch.
 
 ### Common namcap warnings
 
-- **`SKIP` checksum** — expected for `-git` packages, not an error.
+- **`SKIP` checksum** — expected for `-git` packages, and for the repo copy
+  of `profuse` (the release workflow fills in the real checksum).
 - **ELF file outside allowed dirs** — make sure the binary goes to
   `/usr/bin/`, not `/usr/local/bin/`.
 - **Dependency not listed** — if namcap flags a linked library, add the

@@ -1,0 +1,17 @@
+pkgbase = profuse
+	pkgdesc = Proton Drive FUSE client for Linux — mounts your Proton Drive as a local filesystem
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/nearwood/profuse
+	arch = x86_64
+	arch = aarch64
+	license = GPL-3.0-or-later
+	makedepends = go
+	depends = fuse3
+	depends = libsecret
+	optdepends = gnome-keyring: Secret Service backend for GNOME desktops
+	optdepends = kwallet: Secret Service backend for KDE desktops
+	source = profuse-0.1.0.tar.gz::https://github.com/nearwood/profuse/archive/v0.1.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = profuse

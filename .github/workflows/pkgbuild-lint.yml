@@ -2,15 +2,18 @@ name: PKGBUILD lint
 
 on:
   push:
-    paths: [PKGBUILD]
+    paths: [contrib/aur/**]
   pull_request:
-    paths: [PKGBUILD]
+    paths: [contrib/aur/**]
 
 jobs:
   namcap:
     runs-on: ubuntu-latest
     container: archlinux:latest
+    strategy:
+      matrix:
+        pkg: [profuse, profuse-git]
     steps:
       - uses: actions/checkout@v6
       - run: pacman -Sy --noconfirm namcap
-      - run: namcap PKGBUILD
+      - run: namcap contrib/aur/${{ matrix.pkg }}/PKGBUILD

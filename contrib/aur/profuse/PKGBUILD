@@ -1,5 +1,7 @@
-pkgname=profuse-git
-pkgver=r7.a9b59ca
+# pkgver and sha256sums are filled in by .github/workflows/aur-publish.yml
+# from the release tag; bump pkgrel by hand for packaging-only changes.
+pkgname=profuse
+pkgver=0.1.0
 pkgrel=1
 pkgdesc="Proton Drive FUSE client for Linux — mounts your Proton Drive as a local filesystem"
 arch=('x86_64' 'aarch64')
@@ -11,24 +13,16 @@ depends=(
 )
 makedepends=(
     'go'
-    'git'
 )
 optdepends=(
     'gnome-keyring: Secret Service backend for GNOME desktops'
     'kwallet: Secret Service backend for KDE desktops'
 )
-provides=('profuse')
-conflicts=('profuse')
-source=("git+${url}.git")
+source=("$pkgname-$pkgver.tar.gz::${url}/archive/v${pkgver}.tar.gz")
 sha256sums=('SKIP')
 
-pkgver() {
-    cd "$srcdir/profuse"
-    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
-}
-
 build() {
-    cd "$srcdir/profuse"
+    cd "$srcdir/$pkgname-$pkgver"
 
     export CGO_ENABLED=0
     export GOPATH="$srcdir/gopath"
@@ -44,7 +38,7 @@ build() {
 }
 
 package() {
-    cd "$srcdir/profuse"
+    cd "$srcdir/$pkgname-$pkgver"
 
     install -Dm755 profuse \
         "$pkgdir/usr/bin/profuse"

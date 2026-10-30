@@ -7,8 +7,32 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    container: archlinux:base-devel
     steps:
+      - name: Install tools
+        run: pacman -Syu --noconfirm git openssh pacman-contrib
+
       - uses: actions/checkout@v6
+
+      - name: Set up build user
+        run: |
+          useradd -m builder
+          chown -R builder "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Update PKGBUILDs
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          short="$(git rev-parse --short=7 HEAD)"
+
+          cd contrib/aur/profuse
+          sed -i "s/^pkgver=.*/pkgver=${ver}/; s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          sudo -u builder updpkgsums
+          sudo -u builder makepkg --printsrcinfo > .SRCINFO
+
+          cd ../profuse-git
+          sed -i "s/^pkgver=.*/pkgver=${ver}.r0.g${short}/" PKGBUILD
+          sudo -u builder makepkg --printsrcinfo > .SRCINFO
 
       - name: Set up SSH
         run: |
@@ -20,13 +44,25 @@ jobs:
       - name: Push to AUR
         env:
           GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur
+          AUR_USERNAME: ${{ vars.AUR_USERNAME }}
+          AUR_EMAIL: ${{ vars.AUR_EMAIL }}
         run: |
-          git clone ssh://aur@aur.archlinux.org/profuse-git.git /tmp/aur
-          cp PKGBUILD .SRCINFO /tmp/aur/
-          cd /tmp/aur
-          git config user.name "${{ vars.AUR_USERNAME }}"
-          git config user.email "${{ vars.AUR_EMAIL }}"
-          git add PKGBUILD .SRCINFO
-          git diff --cached --quiet && echo "No changes" && exit 0
-          git commit -m "Update to ${{ github.ref_name }}"
-          git push
+          push() {
+            pkg="$1"
+            dir="/tmp/aur-$pkg"
+            git clone "ssh://aur@aur.archlinux.org/$pkg.git" "$dir"
+            cp "contrib/aur/$pkg/PKGBUILD" "contrib/aur/$pkg/.SRCINFO" "$dir/"
+            cd "$dir"
+            git config user.name "$AUR_USERNAME"
+            git config user.email "$AUR_EMAIL"
+            git add PKGBUILD .SRCINFO
+            if git diff --cached --quiet; then
+              echo "$pkg: no changes"
+            else
+              git commit -m "Update to $GITHUB_REF_NAME"
+              git push origin HEAD:master
+            fi
+            cd "$GITHUB_WORKSPACE"
+          }
+          push profuse
+          push profuse-git

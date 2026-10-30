@@ -34,16 +34,19 @@ jobs:
           sed -i "s/^pkgver=.*/pkgver=${ver}.r0.g${short}/" PKGBUILD
           sudo -u builder makepkg --printsrcinfo > .SRCINFO
 
+      # ssh resolves ~ from /etc/passwd (/root), not the container's $HOME,
+      # so use explicit paths.
       - name: Set up SSH
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_aur
-          chmod 600 ~/.ssh/id_aur
-          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+          mkdir -p /root/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > /root/.ssh/id_aur
+          chmod 600 /root/.ssh/id_aur
+          ssh-keyscan aur.archlinux.org > /root/.ssh/known_hosts
+          test -s /root/.ssh/known_hosts
 
       - name: Push to AUR
         env:
-          GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur
+          GIT_SSH_COMMAND: ssh -i /root/.ssh/id_aur -o UserKnownHostsFile=/root/.ssh/known_hosts
           AUR_USERNAME: ${{ vars.AUR_USERNAME }}
           AUR_EMAIL: ${{ vars.AUR_EMAIL }}
         run: |
